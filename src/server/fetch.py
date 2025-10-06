@@ -55,7 +55,7 @@ def fetch_contract(event: APIGatewayEvent, context: Context):
 
         # Okay, I may be a *bit* stupid and forgot to include the `0x` prefix
         # in the database keys...
-        address = HexBytes(address).hex()[2:]
+        address = HexBytes(address).hex()
 
         res = {}
 

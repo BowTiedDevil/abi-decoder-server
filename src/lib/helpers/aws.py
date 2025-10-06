@@ -22,7 +22,7 @@ def upload_abi_data(_type: str, signature: HexBytes, abi_method: str) -> None:
     assert (
         abi_table.put_item(
             Item={
-                "PK": f"{_type}#{signature.hex()}",
+                "PK": f"{_type}#{signature.to_0x_hex()}",
                 "SK": abi_method,
             }
         )["ResponseMetadata"]["HTTPStatusCode"]
@@ -43,7 +43,7 @@ def upload_abi_data_contract(
         abi_table.put_item(
             Item={
                 "PK": f"contract#{chain.lower()}#{address.lower()}",
-                "SK": f"{_type}#{signature.hex()}",
+                "SK": f"{_type}#{signature.to_0x_hex()}",
                 "verbose_abi": verbose_abi,
             }
         )["ResponseMetadata"]["HTTPStatusCode"]
@@ -61,9 +61,7 @@ def get_abi_data(_type: str, signature: HexBytes):
 
     res: Dict[str, List[str]] = defaultdict(list)
 
-    ret = abi_table.query(
-        KeyConditionExpression=Key("PK").eq(f"{_type}#{signature.hex()}")
-    )
+    ret = abi_table.query(KeyConditionExpression=Key("PK").eq(f"{_type}#{signature.to_0x_hex()}"))
 
     if _type == "event":
         # If more than 1 then there is a colliso - uh oh.
@@ -96,10 +94,8 @@ def get_abi_data_contract(
         assert len(signature) == 32  # Topic hash.
 
     ret = abi_table.query(
-        KeyConditionExpression=Key("PK").eq(
-            f"contract#{chain.lower()}#{address.lower()}"
-        )
-        & Key("SK").eq(f"{_type}#{signature.hex()}")
+        KeyConditionExpression=Key("PK").eq(f"contract#{chain.lower()}#{address.lower()}")
+        & Key("SK").eq(f"{_type}#{signature.to_0x_hex()}")
     )
 
     # Should only be no more than 1 result for both functions and events.
@@ -130,7 +126,7 @@ def get_abi_data_pseudo_batch(_type: str, _signatures: List[HexBytes]):
 
         if res:
             for _sig, _res in res.items():
-                assert sig.hex() == _sig
+                assert sig.to_0x_hex() == _sig
 
                 if _type == "function":
                     ret[_sig].extend(_res)
@@ -138,7 +134,7 @@ def get_abi_data_pseudo_batch(_type: str, _signatures: List[HexBytes]):
                     ret[_sig] = _res
         else:
             # `defaultdict(list)` will init an empty list.
-            ret[sig.hex()]
+            ret[sig.to_0x_hex()]
 
     return ret
 
@@ -169,9 +165,9 @@ def get_abi_data_contract_pseudo_batch(
 
         if res:
             for _sig, _res in res.items():
-                assert sig.hex() == _sig
+                assert sig.to_0x_hex() == _sig
                 ret[_sig] = _res
         else:
-            ret[sig.hex()] = None
+            ret[sig.to_0x_hex()] = None
 
     return ret
